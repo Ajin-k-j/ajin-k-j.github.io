@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GreenMetrica</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Open Graph meta tags -->
+  <meta property="og:title" content="GreenMetrica">
+  <meta property="og:description" content="Carbon footprint calculator.">
+  <meta property="og:image" content="Images/logo.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <link rel="icon" href="Images/favicon.ico" type="image/x-icon">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  
+  <style>
+    /* Define CSS variables */
+    :root {
+      --primary-color: #2d6a4f;      /* Dark green */
+      --accent-color: #74c69d;       /* Lighter green */
+      --text-color: #333;            /* Dark gray/black for text */
+      --background-color: #f9f9f9;    /* Background color */
+    }
+
+    /* Reset & Basic Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #f9f9f9;
+      color: #333;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    /* Fade-in Animation for Container */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Pop-in Animation for Form Groups */
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    /* Main Container */
+    .container {
+      max-width: 500px;
+      margin: 40px auto;
+      background-color: #fff;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 0.8s ease-out;
+    }
+    
+    /* Title and Subtitle */
+    .title-container {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    
+    .title-container h1 {
+      font-size: 32px;
+      color: var(--primary-color);
+    }
+    
+    .title-container small {
+      font-size: 14px;
+      color: #555;
+    }
+    
+    hr {
+      border: none;
+      border-top: 1px solid #eee;
+      margin: 20px 0;
+    }
+    
+    /* Instructions */
+    .instructions {
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    
+    .instructions span.monthly {
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+    
+    /* "How It Works" Section Styles */
+    #instructions {
+      padding: 20px;
+      background: var(--background-color);
+      text-align: center;
+    }
+    
+    #instructions h2 {
+      color: var(--primary-color);
+    }
+    
+    #instructions p {
+      color: var(--text-color);
+    }
+    
+    /* Parameter Buttons */
+    .parameter-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    .parameter-buttons button {
+      background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+      border: none;
+      color: #fff;
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s, transform 0.2s, border 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .parameter-buttons button:hover,
+    .parameter-buttons button.active {
+      background: linear-gradient(135deg, #95d5b2, var(--accent-color));
+      transform: scale(1.05);
+    }
+    
+    .parameter-buttons button.active {
+      border: 2px solid #1b4332;
+    }
+    
+    /* Form Elements */
+    form {
+      display: none;
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    .form-group {
+      display: none;
+      margin-bottom: 15px;
+      opacity: 0;
+    }
+    
+    .form-group.active {
+      display: block;
+      animation: popIn 0.4s ease-out forwards;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--primary-color);
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+    
+    .prompt-text {
+      margin-top: 20px;
+      font-style: italic;
+      font-size: 14px;
+      text-align: center;
+      color: #555;
+    }
+    
+    .calculate-button {
+      margin-top: 20px;
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s, transform 0.2s;
+    }
+    
+    .calculate-button:hover {
+      background: linear-gradient(135deg, #95d5b2, var(--accent-color));
+      transform: scale(1.02);
+    }
+    
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 15px;
+      font-size: 14px;
+      color: #555;
+      margin-top: 40px;
+    }
+    
+    footer a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+    
+    footer a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Responsive tweaks */
+    @media (max-width: 600px) {
+      .container {
+        margin: 20px 10px;
+        padding: 15px 20px;
+      }
+      
+      .title-container h1 {
+        font-size: 28px;
+      }
+      
+      .parameter-buttons button {
+        flex: 1 1 40%;
+        font-size: 13px;
+      }
+    }
+    
+    /* Popup styles (if needed) */
+    .popup-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      display: none;
+    }
+    
+    .popup-content {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="container">
+    <div class="title-container">
+      <h1>GreenMetrica</h1>
+      <small>carbon footprint calculator</small>
+    </div>
+    <hr>
+    <!-- How It Works Section -->
+    <section id="instructions">
+      <h2>How It Works</h2>
+      <div style="display: flex; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
+        <div style="flex: 1 1 200px; margin: 10px;">
+          <i class="fas fa-hand-pointer fa-2x" style="color: var(--accent-color);"></i>
+          <h4 style="color: var(--primary-color); margin-top: 10px;">Select</h4>
+          <p style="color: var(--text-color);">
+            Choose the parameters that best match your lifestyle.
+          </p>
+        </div>
+        <div style="flex: 1 1 200px; margin: 10px;">
+          <i class="fas fa-edit fa-2x" style="color: var(--accent-color);"></i>
+          <h4 style="color: var(--primary-color); margin-top: 10px;">Input</h4>
+          <p style="color: var(--text-color);">
+            Enter your monthly consumption data easily.
+          </p>
+        </div>
+        <div style="flex: 1 1 200px; margin: 10px;">
+          <i class="fas fa-calculator fa-2x" style="color: var(--accent-color);"></i>
+          <h4 style="color: var(--primary-color); margin-top: 10px;">Calculate</h4>
+          <p style="color: var(--text-color);">
+            See your carbon footprint and get personalized tips.
+          </p>
+        </div>
+      </div>
+    </section>
+    
+    <hr>
+    
+    <div class="instructions">
+      Choose all the parameters that are applicable for you. <br>
+      <span class="monthly">(Monthly Data)</span>
+    </div>
+    
+    <hr>
+    
+    <!-- Parameter Buttons -->
+    <div class="parameter-buttons">
+      <button type="button" onclick="toggleForm('electricity', event)">
+        <i class="fas fa-bolt"></i> Electricity
+      </button>
+      <button type="button" onclick="toggleForm('car', event)">
+        <i class="fas fa-car"></i> Car
+      </button>
+      <button type="button" onclick="toggleForm('bike', event)">
+        <i class="fas fa-bicycle"></i> Bike
+      </button>
+    </div>
+    
+    <div class="parameter-buttons">
+      <button type="button" onclick="toggleForm('meat', event)">
+        <i class="fas fa-drumstick-bite"></i> Meat
+      </button>
+      <button type="button" onclick="toggleForm('dairy', event)">
+        <i class="fas fa-cheese"></i> Dairy Consumption
+      </button>
+      <button type="button" onclick="toggleForm('otherFood', event)">
+        <i class="fas fa-utensils"></i> LPG
+      </button>
+    </div>
+    
+    <div class="parameter-buttons">
+      <button type="button" onclick="toggleForm('waste', event)">
+        <i class="fas fa-trash"></i> Waste
+      </button>
+      <button type="button" onclick="toggleForm('recycling', event)">
+        <i class="fas fa-recycle"></i> Recycling
+      </button>
+    </div>
+    
+    <hr>
+    
+    <!-- Carbon Footprint Form -->
+    <form id="carbonForm">
+      <div class="form-group" id="electricityForm">
+        <label for="electricityConsumption">Electricity Consumption (kWh)</label>
+        <input type="text" id="electricityConsumption" placeholder="Enter electricity consumption">
+      </div>
+      
+      <div class="form-group" id="carForm">
+        <label for="carDistance">Car Distance Traveled (km)</label>
+        <input type="text" id="carDistance" placeholder="Enter car distance traveled">
+        <label for="carMileage">Car Mileage (km/liter)</label>
+        <input type="text" id="carMileage" placeholder="Enter car mileage">
+        <label for="carFuel">Car Fuel Type</label>
+        <select id="carFuel">
+          <option value="petrol">Petrol</option>
+          <option value="diesel">Diesel</option>
+        </select>
+      </div>
+      
+      <div class="form-group" id="bikeForm">
+        <label for="bikeDistance">Bike Distance Traveled (km)</label>
+        <input type="text" id="bikeDistance" placeholder="Enter bike distance traveled">
+        <label for="bikeMileage">Bike Mileage (km/liter)</label>
+        <input type="text" id="bikeMileage" placeholder="Enter bike mileage">
+        <input type="hidden" id="bikeFuel" value="petrol">
+      </div>
+      
+      <div class="form-group" id="meatForm">
+        <label for="meatConsumption">Meat Consumption (kg)</label>
+        <input type="text" id="meatConsumption" placeholder="Enter meat consumption">
+      </div>
+      
+      <div class="form-group" id="dairyForm">
+        <label for="dairyConsumption">Dairy Consumption (kg)</label>
+        <input type="text" id="dairyConsumption" placeholder="Enter dairy consumption">
+      </div>
+      
+      <div class="form-group" id="otherFoodForm">
+        <label for="otherFoodConsumption">LPG</label>
+        <input type="text" id="otherFoodConsumption" placeholder="Enter LPG consumption">
+      </div>
+      
+      <div class="form-group" id="wasteForm">
+        <label for="wasteGeneration">Waste Generation (kg)</label>
+        <input type="text" id="wasteGeneration" placeholder="Enter waste generation">
+      </div>
+      
+      <div class="form-group" id="recyclingForm">
+        <label for="recyclingAmount">Recycling Amount (kg)</label>
+        <input type="text" id="recyclingAmount" placeholder="Enter recycling amount">
+      </div>
+      
+      <div class="prompt-text">
+        Enter data for all the parameters that are applicable to you and click the Calculate button to get the carbon emission results.
+      </div>
+      
+      <button type="submit" class="calculate-button">Calculate</button>
+    </form>
+  </div>
+  
+  <footer>
+    <p>&copy; 2023 Carbon Footprint Calculator</p>
+  </footer>
+  
+  <script>
+    function toggleForm(parameter, event) {
+      // Remove active class from all parameter buttons
+      const buttons = document.querySelectorAll('.parameter-buttons button');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      
+      // Add active class to the clicked button using the event passed as parameter
+      event.currentTarget.classList.add('active');
+      
+      // Hide all form groups
+      const formGroups = document.querySelectorAll('.form-group');
+      formGroups.forEach(group => group.classList.remove('active'));
+      
+      // Show the selected form group
+      const activeFormGroup = document.getElementById(parameter + 'Form');
+      if (activeFormGroup) {
+        activeFormGroup.classList.add('active');
+      }
+      
+      // Ensure the overall form is visible
+      document.getElementById('carbonForm').style.display = 'block';
+    }
+    
+    // Form submission and calculation
+    document.getElementById("carbonForm").addEventListener("submit", function(event) {
+      event.preventDefault(); // Prevent default form submission
+    
+      // Get user input values
+      const electricityConsumption = parseFloat(document.getElementById("electricityConsumption").value) || 0;
+      const carDistance = parseFloat(document.getElementById("carDistance").value) || 0;
+      const carMileage = parseFloat(document.getElementById("carMileage").value) || 0;
+      const carFuel = document.getElementById("carFuel").value;
+      const bikeDistance = parseFloat(document.getElementById("bikeDistance").value) || 0;
+      const bikeMileage = parseFloat(document.getElementById("bikeMileage").value) || 0;
+      const meatConsumption = parseFloat(document.getElementById("meatConsumption").value) || 0;
+      const dairyConsumption = parseFloat(document.getElementById("dairyConsumption").value) || 0;
+      const otherFoodConsumption = parseFloat(document.getElementById("otherFoodConsumption").value) || 0;
+      const wasteGeneration = parseFloat(document.getElementById("wasteGeneration").value) || 0;
+      const recyclingAmount = parseFloat(document.getElementById("recyclingAmount").value) || 0;
+    
+      // Conversion factors
+      const electricityConversionFactor = 0.5; // kg CO2e/kWh
+      const petrolConversionFactor = 2.31; // kg CO2e/liter
+      const dieselConversionFactor = 2.68; // kg CO2e/liter
+      const meatConversionFactor = 10.3; // kg CO2e/kg
+      const dairyConversionFactor = 3.2; // kg CO2e/kg
+      const otherFoodConversionFactor = 0.20; // kg CO2e/kg
+      const wasteConversionFactor = 0.45; // kg CO2e/kg
+      const recyclingConversionFactor = -0.5; // kg CO2e/kg
+    
+      // Calculate carbon footprint
+      const electricityEmissions = electricityConsumption * electricityConversionFactor;
+      const carEmissions = (carDistance && carMileage) ? (carDistance / carMileage) * ((carFuel === 'petrol') ? petrolConversionFactor : dieselConversionFactor) : 0;
+      const bikeEmissions = (bikeDistance && bikeMileage) ? (bikeDistance / bikeMileage) * petrolConversionFactor : 0;
+      const meatEmissions = meatConsumption * meatConversionFactor;
+      const dairyEmissions = dairyConsumption * dairyConversionFactor;
+      const otherFoodEmissions = otherFoodConsumption * otherFoodConversionFactor;
+      const wasteEmissions = wasteGeneration * wasteConversionFactor;
+      const recyclingEmissions = recyclingAmount * recyclingConversionFactor;
+    
+      // Sum up emissions
+      const totalEmissions = electricityEmissions + carEmissions + bikeEmissions +
+        meatEmissions + dairyEmissions + otherFoodEmissions + wasteEmissions + recyclingEmissions;
+    
+      // Redirect to result page with emissions data (removed average emissions)
+      window.location.href = "result.html?emissions=" + totalEmissions.toFixed(2);
+    });
+  </script>
+</body>
+</html>

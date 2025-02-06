@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Carbon Footprint Journey</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap and Font Awesome CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <!-- Chart.js, GSAP, and LottieFiles -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+  
+  <style>
+    :root {
+      --primary-color: #2d6a4f;
+      --secondary-color: #40916c;
+      --accent-color: #74c69d;
+      --background-color: #f0f7f4;
+      --text-color: #1b4332;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* General container adjustments */
+    .container {
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+
+    /* Main card with reduced full-screen width */
+    .big-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 25px 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transform: translateY(30px);
+      opacity: 0;
+      margin: 20px auto;
+      max-width: 600px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .big-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    }
+
+    .big-card h1 {
+      text-align: center;
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      color: var(--primary-color);
+      margin-bottom: 25px;
+      font-weight: 700;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 250px;
+      width: 100%;
+      margin: 0 auto 30px auto;
+      transform: scale(0.9);
+      opacity: 0;
+    }
+
+    .emission-info {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .result-value {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 700;
+      margin-bottom: 10px;
+      opacity: 0;
+      transform: scale(0.8);
+      /* Color set dynamically via script */
+    }
+
+    .unit {
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      color: var(--text-color);
+      margin-bottom: 5px;
+      opacity: 0.8;
+    }
+
+    .impact-card {
+      background: #fff;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      transform: translateX(-30px);
+      opacity: 0;
+      transition: transform 0.3s ease;
+    }
+
+    .impact-card:hover {
+      transform: translateX(0) scale(1.02);
+    }
+
+    .impact-info p {
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    /* Updated highlight styling: green text with always-visible underline */
+    .highlight {
+      font-weight: 700;
+      font-size: 110%;
+      position: relative;
+      display: inline-block;
+      padding: 0 2px;
+      color: #2d6a4f;
+    }
+
+    .highlight::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: #74c69d;
+      transform: scaleX(1);
+    }
+
+    .text-emission { color: var(--secondary-color); }
+    /* Updated impact text color to dark green */
+    .text-impact { color: #167c52; }
+    .text-trees { color: var(--primary-color); }
+
+    /* Green Action Plan Section and Share Section width reduced */
+    #tipsCard,
+    #shareCard {
+      background: #fff;
+      border-radius: 20px;
+      padding: 25px 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      margin: 20px auto;
+      max-width: 600px;
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    #tipsCard h2,
+    #shareCard h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+    }
+    /* Share Card specific background */
+    #shareCard {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: #fff;
+    }
+
+    .share-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .share-button {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 12px 25px;
+      border-radius: 50px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(5px);
+      font-size: clamp(0.9rem, 2.5vw, 1rem);
+    }
+
+    .share-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-3px);
+      color: #fff;
+      text-decoration: none;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px 0;
+      color: var(--text-color);
+      opacity: 0.8;
+      font-size: clamp(0.8rem, 2vw, 0.9rem);
+    }
+
+    footer a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    .eco-badge {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: var(--accent-color);
+      color: white;
+      padding: 8px 15px;
+      border-radius: 15px;
+      font-weight: 600;
+      transform: rotate(5deg);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      font-size: clamp(0.8rem, 2.5vw, 1rem);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: rotate(5deg) translateY(0); }
+      50% { transform: rotate(5deg) translateY(-5px); }
+    }
+
+    /* Outline and hover effect for Green Action Plan cards */
+    #greenActionCards .card {
+      border: 2px solid #74c69d;
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+    #greenActionCards .card:hover {
+      transform: scale(1.05);
+      border-color: #40916c;
+    }
+
+    /* Responsive adjustments for mobile devices */
+    @media (max-width: 768px) {
+      .container { padding: 0 5px; }
+      .big-card { padding: 20px 10px; max-width: 95%; margin: 10px auto; }
+      #tipsCard, #shareCard { padding: 20px 10px; max-width: 95%; margin: 10px auto; }
+      .share-button { width: 100%; justify-content: center; }
+    }
+
+    .pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .shake {
+      animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Main Carbon Footprint Card -->
+    <div id="bigCard" class="big-card">
+      <div class="eco-badge">Eco Report</div>
+      <h1>Your Carbon Footprint Journey</h1>
+      <div class="chart-container">
+        <canvas id="emissionChart"></canvas>
+      </div>
+      <div class="emission-info">
+        <div class="result-value pulse" id="emissionsValue">0.00</div>
+        <div class="unit">kg CO₂e (Monthly)</div>
+        <p id="emissionMessage"></p>
+      </div>
+      <div class="impact-info">
+        <div class="impact-card">
+          <p id="impactStatement"></p>
+        </div>
+        <div class="impact-card">
+          <p id="treeStatement"></p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Green Action Plan Section -->
+    <div id="tipsCard">
+      <h2>Your Green Action Plan</h2>
+      <div class="row" id="greenActionCards"></div>
+    </div>
+    
+    <!-- Share Card -->
+    <div id="shareCard">
+      <h2>Share Your Impact</h2>
+      <div class="share-buttons">
+        <a id="facebookShare" class="share-button" href="#" target="_blank">
+          <i class="fab fa-facebook-f"></i> Share on Facebook
+        </a>
+        <a id="whatsappShare" class="share-button" href="#" target="_blank">
+          <i class="fab fa-whatsapp"></i> Share on WhatsApp
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <footer>
+    <p>&copy; 2023 Carbon Footprint Calculator | Making Earth Greener Together</p>
+  </footer>
+  
+  <script>
+    // GSAP Animations
+    gsap.to("#bigCard", {
+      duration: 1,
+      opacity: 1,
+      y: 0,
+      ease: "power3.out"
+    });
+    gsap.to(".chart-container", {
+      duration: 1,
+      opacity: 1,
+      scale: 1,
+      ease: "power3.out",
+      delay: 0.3
+    });
+    gsap.to(".result-value", {
+      duration: 1,
+      opacity: 1,
+      scale: 1,
+      ease: "elastic.out(1, 0.5)",
+      delay: 0.5
+    });
+    gsap.to(".impact-card", {
+      duration: 0.8,
+      opacity: 1,
+      x: 0,
+      ease: "power3.out",
+      stagger: 0.2,
+      delay: 0.7
+    });
+    gsap.to("#tipsCard", {
+      duration: 1,
+      opacity: 1,
+      y: 0,
+      ease: "power3.out",
+      delay: 0.9
+    });
+    gsap.to("#tipsCard .col", {
+      duration: 0.8,
+      opacity: 1,
+      x: 0,
+      ease: "power3.out",
+      stagger: 0.1,
+      delay: 1.1
+    });
+    gsap.to("#shareCard", {
+      duration: 1,
+      opacity: 1,
+      y: 0,
+      ease: "power3.out",
+      delay: 1.3
+    });
+    
+    // Get URL parameters for emissions and major source (default to 'electricity')
+    const urlParams = new URLSearchParams(window.location.search);
+    const emissions = parseFloat(urlParams.get("emissions")) || 0;
+    const majorSource = urlParams.get("source") || "electricity";
+    
+    // Animate counting up to the emission value
+    const emissionsValueEl = document.getElementById("emissionsValue");
+    gsap.to({ val: 0 }, {
+      val: emissions,
+      duration: 2,
+      ease: "power2.out",
+      onUpdate: function() {
+        emissionsValueEl.textContent = this.targets()[0].val.toFixed(2);
+      },
+      delay: 0.5
+    });
+    
+    // Set emission value color based on average (150 kg CO₂e)
+    if (emissions > 150) {
+      emissionsValueEl.style.color = "red";
+    } else {
+      emissionsValueEl.style.color = "green";
+    }
+    
+    // Enhanced emission message with animation (including national average info)
+    const emissionMessageEl = document.getElementById("emissionMessage");
+    if(emissions < 150) {
+      emissionMessageEl.innerHTML = `
+        <span class='highlight text-emission'>
+          <i class="fas fa-star"></i> Outstanding Achievement!
+        </span><br>
+        Your carbon footprint is below the national average (150 kg CO₂e/Month).
+      `;
+    } else {
+      emissionMessageEl.innerHTML = `
+        <span class='highlight text-emission shake'>
+          <i class="fas fa-exclamation-circle"></i> Time for Action!
+        </span><br>
+        Let's work together to reduce your carbon footprint.
+      `;
+    }
+    
+    // Chart.js for the emission chart
+    const ctx = document.getElementById('emissionChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Your Footprint', 'National Average'],
+        datasets: [{
+          data: [emissions, 150],
+          backgroundColor: [
+            'rgba(64, 145, 108, 0.7)',
+            'rgba(230, 57, 70, 0.7)'
+          ],
+          borderColor: [
+            'rgba(64, 145, 108, 1)',
+            'rgba(230, 57, 70, 1)'
+          ],
+          borderWidth: 2,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(0, 0, 0, 0.1)' }
+          },
+          x: {
+            grid: { display: false }
+          }
+        },
+        animation: {
+          duration: 2000,
+          easing: 'easeInOutQuart'
+        }
+      }
+    });
+    
+    // Enhanced impact calculations with additional options
+    const impactOptions = [
+      { type: "computer", label: "hours of computer use", factor: 0.1, icon: "💻" },
+      { type: "car", label: "kilometers driven by car", factor: 0.25, icon: "🚗" },
+      { type: "smartphone", label: "smartphone charges", factor: 0.05, icon: "📱" },
+      { type: "led", label: "LED bulb hours", factor: 0.02, icon: "💡" },
+      { type: "dishwasher", label: "dishwasher cycles", factor: 0.12, icon: "🍽️" },
+      { type: "aircon", label: "hours of air conditioning", factor: 0.3, icon: "❄️" },
+      { type: "coffee", label: "cups of coffee brewed", factor: 0.03, icon: "☕" }
+    ];
+    const randomChoice = impactOptions[Math.floor(Math.random() * impactOptions.length)];
+    const equivalentValue = (emissions / randomChoice.factor).toFixed(1);
+    document.getElementById("impactStatement").innerHTML = `
+      ${randomChoice.icon} Your monthly emissions of 
+      <span class='highlight text-emission'>${emissions.toFixed(2)} kg CO₂e</span> 
+      is equivalent to 
+      <span class='highlight text-impact'>${equivalentValue}</span> 
+      ${randomChoice.label}.
+    `;
+    
+    // Tree calculation using monthly values (using original phrasing)
+    const treesNeeded = Math.ceil(emissions / 20);
+    document.getElementById("treeStatement").innerHTML = `
+      🌳 Your monthly carbon footprint of 
+      <span class='highlight text-emission'>${emissions.toFixed(2)} kg CO₂e</span> 
+      can be offset by planting 
+      <span class='highlight text-trees'>${treesNeeded} trees</span>, 
+      which will grow into your personal carbon-capturing forest over 
+      <span class='highlight text-trees'>15 years</span>.
+    `;
+    
+    // GREEN ACTION PLAN: Prepare many relevant green actions and show some randomly as cards.
+    const greenActions = [
+      { title: "Install Solar Panels", description: "Reduce reliance on grid electricity and lower your carbon footprint.", icon: "☀️" },
+      { title: "Switch to Energy-Efficient Appliances", description: "Choose Energy Star rated devices to consume less power.", icon: "🔌" },
+      { title: "Adopt a Plant-Based Diet", description: "Reducing meat consumption helps lower greenhouse gas emissions.", icon: "🥦" },
+      { title: "Use Public Transportation", description: "Cut down on personal vehicle use for a greener commute.", icon: "🚌" },
+      { title: "Insulate Your Home", description: "Proper insulation reduces heating and cooling demands.", icon: "🏠" },
+      { title: "Practice Composting", description: "Turn organic waste into nutrient-rich soil, reducing landfill emissions.", icon: "🍃" },
+      { title: "Use Reusable Products", description: "Minimize waste by opting for reusable over disposable items.", icon: "♻️" },
+      { title: "Participate in Community Tree Planting", description: "Help offset your carbon footprint and improve local air quality.", icon: "🌳" },
+      { title: "Install a Smart Thermostat", description: "Optimize heating and cooling for energy savings.", icon: "🌡️" },
+      { title: "Reduce Water Waste", description: "Conserving water also saves energy used in water processing.", icon: "💧" }
+    ];
+    
+    // Shuffle the array of green actions
+    const shuffledActions = greenActions.sort(() => 0.5 - Math.random());
+    // Choose 4 random actions to display (adjust the number as desired)
+    const selectedActions = shuffledActions.slice(0, 4);
+    
+    // Build and append the action cards; using "col-md-6 col-lg-6" ensures two per row on large screens.
+    const greenActionCardsContainer = document.getElementById("greenActionCards");
+    selectedActions.forEach(action => {
+      const colDiv = document.createElement("div");
+      colDiv.className = "col-md-6 col-lg-6 mb-4";
+      colDiv.style.opacity = 0;
+      colDiv.style.transform = "translateY(30px)";
+      
+      colDiv.innerHTML = `
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">${action.icon} ${action.title}</h5>
+            <p class="card-text">${action.description}</p>
+          </div>
+        </div>
+      `;
+      greenActionCardsContainer.appendChild(colDiv);
+      
+      // Animate each card as it appears
+      gsap.to(colDiv, {
+        duration: 0.8,
+        opacity: 1,
+        y: 0,
+        ease: "power3.out",
+        delay: 1.2
+      });
+    });
+    
+    // Enhanced share functionality
+    const shareMsg = `🌍 My carbon footprint is ${emissions.toFixed(2)} kg CO₂e. Together, we can make a difference! Check your impact:`;
+    const facebookShare = document.getElementById("facebookShare");
+    facebookShare.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(shareMsg)}`;
+    
+    const whatsappShare = document.getElementById("whatsappShare");
+    whatsappShare.href = `whatsapp://send?text=${encodeURIComponent(shareMsg + " " + window.location.href)}`;
+  </script>
+</body>
+</html>
